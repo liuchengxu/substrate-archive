@@ -46,30 +46,54 @@ parity-util-mem = { version = "*", default-features = false, features = ["std"] 
 codec = { package = "parity-scale-codec", version = "1.3", default-features = false, features = ["derive", "full"] }
 hash-db = "0.15"
 
+####################################
 # Substrate
-sp-database = { git = "https://github.com/paritytech/substrate", branch = "master", package="sp-database" }
-sp-storage = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-storage" }
-sp-externalities = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-externalities" }
-sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-runtime" }
-sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sc-client-api" }
-sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-blockchain" }
-sp-core = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-core" }
-sp-api = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-api" }
-sp-block-builder = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-block-builder" }
-sp-version = {  git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-version" }
-sc-executor = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sc-executor" }
-sc-chain-spec = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sc-chain-spec" }
-sp-trie = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-trie" }
-sp-state-machine = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-state-machine" }
-frame-metadata = { git = "https://github.com/paritytech/substrate", branch = "master" }
+# sp-database = { git = "https://github.com/paritytech/substrate", branch = "master", package="sp-database" }
+# sp-storage = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-storage" }
+# sp-externalities = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-externalities" }
+# sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-runtime" }
+# sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sc-client-api" }
+# sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-blockchain" }
+# sp-core = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-core" }
+# sp-api = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-api" }
+# sp-block-builder = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-block-builder" }
+# sp-version = {  git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-version" }
+# sc-executor = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sc-executor" }
+# sc-chain-spec = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sc-chain-spec" }
+# sp-trie = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-trie" }
+# sp-state-machine = { git = "https://github.com/paritytech/substrate", branch = "master", package = "sp-state-machine" }
+# frame-metadata = { git = "https://github.com/paritytech/substrate", branch = "master" }
+# itoa = "0.4.6"
+####################################
+
 itoa = "0.4.6"
 
-frame-system = { git = "https://github.com/paritytech/substrate", branch = "master" }
-frame-support = { git = "https://github.com/paritytech/substrate", branch = "master" }
-pallet-authorship = { git = "https://github.com/paritytech/substrate", branch = "master" }
-pallet-staking = { git = "https://github.com/paritytech/substrate", branch = "master" }
+# Substrate used in ChainX
+sp-database = { version = "2.0.0-rc6" }
+sp-storage = { version = "2.0.0-rc6" }
+sp-runtime = { version = "2.0.0-rc6" }
+sc-client-api = { version = "2.0.0-rc6" }
+sp-blockchain = { version = "2.0.0-rc6" }
+sp-core = { version = "2.0.0-rc6" }
+sp-api = { version = "2.0.0-rc6" }
+sp-block-builder = { version = "2.0.0-rc6" }
+sp-version = { version = "2.0.0-rc6" }
+sc-chain-spec = { version = "2.0.0-rc6" }
+sp-trie = { version = "2.0.0-rc6" }
 
-node-runtime = { git = "https://github.com/paritytech/substrate", branch = "master" }
+sc-executor = { version = "0.8.0-rc6" }
+sp-externalities = { version = "0.8.0-rc6" }
+sp-state-machine = { version = "0.8.0-rc6" }
+
+frame-metadata = { version = "11.0.0-rc6" }
+
+frame-system = { version = "2.0.0-rc6" }
+frame-support = { version = "2.0.0-rc6" }
+pallet-authorship = { version = "2.0.0-rc6" }
+pallet-staking = { version = "2.0.0-rc6" }
+
+# chainx-runtime = { path = "../../chainx-org/ChainX-2.0/runtime" }
+chainx-runtime = { git = "https://github.com/chainx-org/ChainX", branch = "chainx-archive" }
 
 [dev-dependencies]
 # desub-extras = { path = "../desub/extras/", package="desub-extras", features = ["polkadot"] }

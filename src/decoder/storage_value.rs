@@ -43,7 +43,7 @@ pub enum UncleEntryItem<BlockNumber, Hash, Author> {
 
 type Hash = sp_core::H256;
 type BlockNumber = u32;
-type AccountId = node_runtime::AccountId;
+type AccountId = chainx_runtime::AccountId;
 
 pub fn try_decode_storage_value(any_ty: &str, encoded: Vec<u8>) -> Result<(), codec::Error> {
     /*
@@ -59,7 +59,11 @@ pub fn try_decode_storage_value(any_ty: &str, encoded: Vec<u8>) -> Result<(), co
         // println!("decoded value:{:?}", decoded);
         // }
         "T::BlockNumber" => {
-            let decoded: u32 = super::generic_decode(encoded)?;
+            let decoded: BlockNumber = super::generic_decode(encoded)?;
+            println!("decoded: {:?}", decoded);
+        }
+        "Vec<T::BlockNumber>" => {
+            let decoded: Vec<BlockNumber> = super::generic_decode(encoded)?;
             println!("decoded: {:?}", decoded);
         }
         "Multiplier" => {
@@ -91,7 +95,7 @@ pub fn try_decode_storage_value(any_ty: &str, encoded: Vec<u8>) -> Result<(), co
             println!("decoded: {:?}", decoded);
         }
         "Vec<EventRecord<T::Event, T::Hash>>" => {
-            let decoded: Vec<EventRecord<node_runtime::Event, Hash>> =
+            let decoded: Vec<EventRecord<chainx_runtime::Event, Hash>> =
                 super::generic_decode(encoded)?;
             println!("decoded: {:?}", decoded);
         }

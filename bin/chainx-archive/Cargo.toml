@@ -1,0 +1,32 @@
+[package]
+name = "chainx-archive"
+version = "0.2.1"
+authors = ["Andrew Plaza <aplaza@liquidthink.net>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[patch.crates-io]
+jsonrpc-derive = { git = "https://github.com/paritytech/jsonrpc", rev = "57575efe9c220c7e7c0addf3c90e9577e3296c80" }
+
+[dependencies]
+substrate-archive = { path = "../../", features = ["logging", "with-tokio"] }
+clap = { version = "2.33.1", features = ["yaml", "suggestions", "color"] }
+toml = "0.5"
+futures = "0.3.5"
+log = "0.4"
+pretty_env_logger = "0.4.0"
+anyhow = "1.0.31"
+serde = "1.0"
+tokio = { version = "0.2", features = ["full", "signal"] }
+
+# chainx-runtime = { path = "../../../../chainx-org/ChainX-2.0/runtime" }
+# chainx-executor = { path = "../../../../chainx-org/ChainX-2.0/executor" }
+# chainx-cli = { path = "../../../../chainx-org/ChainX-2.0/cli" }
+
+chainx-runtime = { git = "https://github.com/chainx-org/ChainX", branch = "chainx-archive" }
+chainx-executor = { git = "https://github.com/chainx-org/ChainX", branch = "chainx-archive" }
+chainx-cli = { git = "https://github.com/chainx-org/ChainX", branch = "chainx-archive" }
+
+
+[features]
