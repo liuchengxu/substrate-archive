@@ -19,19 +19,34 @@ use crate::error::ArchiveResult;
 use crate::queries;
 use crate::types::*;
 use sp_runtime::traits::{Block as BlockT, NumberFor};
+use std::convert::TryInto;
 use std::marker::PhantomData;
 use xtra::prelude::*;
+
+use crate::decoder::StorageMetadataLookupTable;
 
 #[derive(Clone)]
 pub struct DatabaseActor<B: BlockT> {
     db: Database,
-    _marker: PhantomData<B>
+    storage_decoder: Option<StorageMetadataLookupTable>,
+    _marker: PhantomData<B>,
 }
 
 impl<B: BlockT> DatabaseActor<B> {
-    pub async fn new(url: String) -> ArchiveResult<Self> {
+    pub async fn new(url: String, rpc_url: String) -> ArchiveResult<Self> {
+        let rpc = super::connect::<B>(rpc_url.as_str()).await;
+        let meta = rpc.metadata(None).await?;
+
+        let meta: frame_metadata::RuntimeMetadataPrefixed =
+            codec::Decode::decode(&mut meta.as_slice())
+                .expect("failed to decode metadata prefixed");
+        let m: crate::decoder::metadata::Metadata =
+            meta.try_into().expect("failed to convert to metadata");
+        let lookup_table: StorageMetadataLookupTable = m.into();
+
         Ok(Self {
             db: Database::new(url).await?,
+            storage_decoder: Some(lookup_table),
             _marker: PhantomData,
         })
     }
@@ -40,11 +55,12 @@ impl<B: BlockT> DatabaseActor<B> {
     pub fn with_db(db: Database) -> Self {
         Self {
             db,
-            _marker: PhantomData
-        }     
+            storage_decoder: None,
+            _marker: PhantomData,
+        }
     }
 
-    async fn block_handler(&self, blk: Block<B>) -> ArchiveResult<()> 
+    async fn block_handler(&self, blk: Block<B>) -> ArchiveResult<()>
     where
         NumberFor<B>: Into<u32>,
     {
@@ -57,7 +73,7 @@ impl<B: BlockT> DatabaseActor<B> {
         Ok(())
     }
 
-    async fn batch_block_handler(&self, mut blks: BatchBlock<B>) -> ArchiveResult<()> 
+    async fn batch_block_handler(&self, mut blks: BatchBlock<B>) -> ArchiveResult<()>
     where
         NumberFor<B>: Into<u32>,
     {
@@ -97,6 +113,16 @@ impl<B: BlockT> DatabaseActor<B> {
         }
         let storage = Vec::<StorageModel<B>>::from(VecStorageWrap(storage));
         std::mem::drop(conn);
+
+        if let Some(decoder) = &self.storage_decoder {
+            for s in storage.iter() {
+                println!(
+                    "---- batch_storage_handler:{:?}",
+                    decoder.parse_storage_key(hex::encode(&s.key().0))
+                );
+            }
+        }
+
         self.db.insert(storage).await?;
         Ok(())
     }
@@ -172,11 +198,7 @@ impl<B: BlockT> Message for VecStorageWrap<B> {
 
 #[async_trait::async_trait]
 impl<B: BlockT> Handler<VecStorageWrap<B>> for DatabaseActor<B> {
-    async fn handle(
-        &mut self,
-        storage: VecStorageWrap<B>,
-        _ctx: &mut Context<Self>,
-    ) {
+    async fn handle(&mut self, storage: VecStorageWrap<B>, _ctx: &mut Context<Self>) {
         let now = std::time::Instant::now();
         if let Err(e) = self.batch_storage_handler(storage.0).await {
             log::error!("{}", e.to_string());

@@ -126,7 +126,8 @@ where
         tx_num: Sender<u32>,
     ) -> ArchiveResult<Self> {
         let (psql_url, rpc_url) = (ctx.psql_url().to_string(), ctx.rpc_url().to_string());
-        let db = super::DatabaseActor::new(psql_url).await?;
+        let db = super::DatabaseActor::new(psql_url, rpc_url.clone()).await?;
+
         let db_pool = super::ActorPool::new(db, 4).spawn();
         let meta_addr = super::Metadata::new(rpc_url, db_pool.clone())
             .await?
