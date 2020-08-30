@@ -1,4 +1,5 @@
 pub mod metadata;
+pub mod storage_value;
 
 use std::collections::HashMap;
 
@@ -71,10 +72,20 @@ pub struct TransparentStorageKey {
     pub ty: TransparentStorageType,
 }
 
+impl TransparentStorageKey {
+    pub fn get_value_type(&self) -> String {
+        match &self.ty {
+            TransparentStorageType::Plain { value_ty } => value_ty.into(),
+            TransparentStorageType::Map { value_ty, .. } => value_ty.into(),
+            TransparentStorageType::DoubleMap { value_ty, .. } => value_ty.into(),
+        }
+    }
+}
+
 /// Converts the inner of `DecodeDifferent::Decoded(_)` to String.
 fn as_decoded_type<B: 'static, O: 'static + Into<String>>(value: DecodeDifferent<B, O>) -> String {
     match value {
-        DecodeDifferent::Encode(b) => unreachable!("TODO: really unreachable?"),
+        DecodeDifferent::Encode(_b) => unreachable!("TODO: really unreachable?"),
         DecodeDifferent::Decoded(o) => o.into(),
     }
 }
@@ -366,30 +377,6 @@ TODO: use a script to generate this function automatically.
     "weights::ExtrinsicsWeight",
 ]
 */
-
-fn try_decode_storage_value(any_ty: &str, encoded_hex_str: &str) -> Result<(), codec::Error> {
-    /*
-        use frame_system::AccountInfo;
-        use pallet_balances::AccountData;
-        use polkadot_primitives::v1::{AccountIndex, Balance};
-
-        let encoded = hex::decode(encoded_hex_str).unwrap();
-
-        // TODO: use a macro?
-        match any_ty {
-            "AccountInfo<T::Index, T::AccountData>" => {
-                let decoded: AccountInfo<AccountIndex, AccountData<Balance>> = generic_decode(encoded)?;
-                println!("decoded value:{:?}", decoded);
-            }
-            _ => {
-                println!("Unknown value type: {:?}", any_ty);
-                return Err("Unknown value type".into());
-            }
-        }
-
-    */
-    Ok(())
-}
 
 /*
 #[cfg(test)]

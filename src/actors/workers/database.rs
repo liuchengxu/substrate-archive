@@ -116,10 +116,29 @@ impl<B: BlockT> DatabaseActor<B> {
 
         if let Some(decoder) = &self.storage_decoder {
             for s in storage.iter() {
-                println!(
-                    "---- batch_storage_handler:{:?}",
-                    decoder.parse_storage_key(hex::encode(&s.key().0))
-                );
+                if s.data().is_none() {
+                    continue;
+                }
+                let decoded_storage_key = decoder.parse_storage_key(hex::encode(&s.key().0));
+                if let Some(sk) = decoded_storage_key {
+                    let value_ty = sk.get_value_type();
+                    println!(
+                        "block_num:{:?}, module_prefix:{:?}, storage_prefix:{:?}, value_tye: {:?}",
+                        s.block_num(),
+                        sk.module_prefix,
+                        sk.storage_prefix,
+                        value_ty,
+                    );
+                    if let Some(ref storage_value) = s.data() {
+                        let _ = crate::decoder::storage_value::try_decode_storage_value(
+                            value_ty.as_str(),
+                            storage_value.0.clone(),
+                        );
+                    } else {
+                        println!("block_num:{:?}, storage_value is none", s.block_num());
+                    }
+                } else {
+                }
             }
         }
 

@@ -64,6 +64,13 @@ sp-state-machine = { git = "https://github.com/paritytech/substrate", branch = "
 frame-metadata = { git = "https://github.com/paritytech/substrate", branch = "master" }
 itoa = "0.4.6"
 
+frame-system = { git = "https://github.com/paritytech/substrate", branch = "master" }
+frame-support = { git = "https://github.com/paritytech/substrate", branch = "master" }
+pallet-authorship = { git = "https://github.com/paritytech/substrate", branch = "master" }
+pallet-staking = { git = "https://github.com/paritytech/substrate", branch = "master" }
+
+node-runtime = { git = "https://github.com/paritytech/substrate", branch = "master" }
+
 [dev-dependencies]
 # desub-extras = { path = "../desub/extras/", package="desub-extras", features = ["polkadot"] }
 polkadot-service = { package = "polkadot-service", git = "https://github.com/paritytech/polkadot", branch = "master" }
