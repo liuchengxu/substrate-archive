@@ -122,18 +122,26 @@ impl<B: BlockT> DatabaseActor<B> {
                 let decoded_storage_key = decoder.parse_storage_key(hex::encode(&s.key().0));
                 if let Some(sk) = decoded_storage_key {
                     let value_ty = sk.get_value_type();
-                    println!(
-                        "block_num:{:?}, module_prefix:{:?}, storage_prefix:{:?}, value_tye: {:?}",
-                        s.block_num(),
-                        sk.module_prefix,
-                        sk.storage_prefix,
-                        value_ty,
-                    );
                     if let Some(ref storage_value) = s.data() {
-                        let _ = crate::decoder::storage_value::try_decode_storage_value(
+                        let decoded_value = crate::decoder::storage_value::try_decode_storage_value(
                             value_ty.as_str(),
                             storage_value.0.clone(),
                         );
+
+                        let common_msg = format!(
+                            "block_num:{:?}, module_prefix:{:?}, storage_prefix:{:?}, value_tye: {:?}",
+                                    s.block_num(),
+                                    sk.module_prefix,
+                                    sk.storage_prefix,
+                                    value_ty,
+                                );
+
+                        match decoded_value {
+                            Ok(value) => println!("{}, value:{:?}", common_msg, value),
+                            Err(e) => {
+                                println!("{}, can not decode storage value:{:?}", common_msg, e);
+                            }
+                        }
                     } else {
                         println!("block_num:{:?}, storage_value is none", s.block_num());
                     }

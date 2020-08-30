@@ -9345,6 +9345,7 @@ dependencies = [
  "log 0.4.11",
  "num_cpus",
  "pallet-authorship 2.0.0-rc6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pallet-balances 2.0.0-rc6 (registry+https://github.com/rust-lang/crates.io-index)",
  "pallet-staking 2.0.0-rc6 (registry+https://github.com/rust-lang/crates.io-index)",
  "parity-scale-codec",
  "parity-util-mem",

@@ -7781,6 +7781,7 @@ dependencies = [
  "log",
  "num_cpus",
  "pallet-authorship",
+ "pallet-balances",
  "pallet-staking",
  "parity-scale-codec",
  "parity-util-mem",

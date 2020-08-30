@@ -91,6 +91,7 @@ frame-system = { version = "2.0.0-rc6" }
 frame-support = { version = "2.0.0-rc6" }
 pallet-authorship = { version = "2.0.0-rc6" }
 pallet-staking = { version = "2.0.0-rc6" }
+pallet-balances = { version = "2.0.0-rc6" }
 
 # chainx-runtime = { path = "../../chainx-org/ChainX-2.0/runtime" }
 chainx-runtime = { git = "https://github.com/chainx-org/ChainX", branch = "chainx-archive" }
