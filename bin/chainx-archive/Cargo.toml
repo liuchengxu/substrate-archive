@@ -19,6 +19,7 @@ pretty_env_logger = "0.4.0"
 anyhow = "1.0.31"
 serde = "1.0"
 tokio = { version = "0.2", features = ["full", "signal"] }
+codec = { package = "parity-scale-codec", version = "1.3", default-features = false, features = ["derive", "full"] }
 
 # chainx-runtime = { path = "../../../../chainx-org/ChainX-2.0/runtime" }
 # chainx-executor = { path = "../../../../chainx-org/ChainX-2.0/executor" }
@@ -27,6 +28,9 @@ tokio = { version = "0.2", features = ["full", "signal"] }
 chainx-runtime = { git = "https://github.com/chainx-org/ChainX", branch = "chainx-archive" }
 chainx-executor = { git = "https://github.com/chainx-org/ChainX", branch = "chainx-archive" }
 chainx-cli = { git = "https://github.com/chainx-org/ChainX", branch = "chainx-archive" }
+
+frame-metadata = { version = "11.0.0-rc6" }
+sp-core = { version = "2.0.0-rc6" }
 
 
 [features]

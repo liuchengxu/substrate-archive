@@ -18,9 +18,32 @@ mod cli_opts;
 mod config;
 
 use anyhow::Result;
+use std::convert::TryInto;
+use std::ops::Deref;
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
+    // Why this does not work?
+    // let meta: frame_metadata::RuntimeMetadataPrefixed = chainx_runtime::Runtime::metadata();
+    // let m: substrate_archive::decoder::metadata::Metadata =
+    // meta.try_into().expect("failed to convert to metadata");
+
+    let meta: sp_core::OpaqueMetadata = chainx_runtime::Runtime::metadata().into();
+    let meta: &Vec<u8> = meta.deref();
+    let meta: frame_metadata::RuntimeMetadataPrefixed =
+        codec::Decode::decode(&mut meta.as_slice()).expect("failed to decode metadata prefixed");
+    let m: substrate_archive::decoder::metadata::Metadata =
+        meta.try_into().expect("failed to convert to metadata");
+    let lookup_table: substrate_archive::decoder::StorageMetadataLookupTable = m.clone().into();
+
+    let double_map_key1 = substrate_archive::decoder::filter_double_map_key1_types(m);
+
+    // Ensure all key1 of double map are determined.
+    //
+    // ["Kind", "TradingPairId", "SessionIndex", "T::AccountId", "Chain"]
+    //
+    // TODO: build the tables from the metadata
+
     let config = config::Config::new()?;
     substrate_archive::init_logger(config.cli().log_level, log::LevelFilter::Debug);
 

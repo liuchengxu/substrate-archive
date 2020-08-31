@@ -93,78 +93,53 @@ type AccountIndex = u32;
 type Balance = u128;
 type AccountId = chainx_runtime::AccountId;
 
+macro_rules! try_decode_and_as_json {
+    ( $value_ty:expr, $encoded:expr => $($decoded_ty_string: expr => $decoded_ty:ty;)+ ) => {
+
+        match $value_ty {
+            $(
+                $decoded_ty_string => {
+                    let decoded: $decoded_ty = super::generic_decode($encoded)?;
+                    serde_json::json!({ "value": decoded })
+
+                }
+            )+
+            _ => {
+                println!("Unknown value type: {:?}", $value_ty);
+                return Err("Unknown value type".into());
+            }
+        }
+    };
+}
+
 pub fn try_decode_storage_value(
     any_ty: &str,
     encoded: Vec<u8>,
 ) -> Result<serde_json::value::Value, codec::Error> {
-    // TODO: use a macro?
-    let value = match any_ty {
-        "AccountInfo<T::Index, T::AccountData>" => {
-            let decoded: AccountInfo<AccountIndex, AccountData<Balance>> =
-                super::generic_decode(encoded)?;
-            serde_json::json!({ "value": decoded })
-        }
-        "T::BlockNumber" => {
-            let decoded: BlockNumber = super::generic_decode(encoded)?;
-            serde_json::json!({ "value": decoded })
-        }
-        "Vec<T::BlockNumber>" => {
-            let decoded: Vec<BlockNumber> = super::generic_decode(encoded)?;
-            serde_json::json!({ "value": decoded })
-        }
-        "Multiplier" => {
-            let decoded: sp_runtime::FixedU128 = super::generic_decode(encoded)?;
-            serde_json::json!({ "value": decoded })
-        }
-        "bool" => {
-            let decoded: bool = super::generic_decode(encoded)?;
-            serde_json::json!({ "value": decoded })
-        }
-        "u32" | "EventIndex" => {
-            let decoded: u32 = super::generic_decode(encoded)?;
-            serde_json::json!({ "value": decoded })
-        }
-        "u64" | "T::Moment" => {
-            let decoded: u64 = super::generic_decode(encoded)?;
-            serde_json::json!({ "value": decoded })
-        }
-        "T::Hash" => {
-            let decoded: Hash = super::generic_decode(encoded)?;
-            serde_json::json!({ "value": decoded })
-        }
-        "Vec<T::Hash>" => {
-            let decoded: Vec<sp_core::H256> = super::generic_decode(encoded)?;
-            serde_json::json!({ "value": decoded })
-        }
-        "weights::ExtrinsicsWeight" => {
-            let decoded: ExtrinsicsWeight = super::generic_decode(encoded)?;
-            serde_json::json!({ "value": decoded })
-        }
-        "Vec<EventRecord<T::Event, T::Hash>>" => {
-            let decoded: Vec<EventRecord<chainx_runtime::Event, Hash>> =
-                super::generic_decode(encoded)?;
-            println!("TODO: serialized decoded: {:?} ", decoded);
-            return Err("Can not serialize this type".into());
-            // serde_json::json!({ "value": decoded })
-        }
-        "Vec<UncleEntryItem<T::BlockNumber, T::Hash, T::AccountId>>" => {
-            let decoded: Vec<UncleEntryItem<BlockNumber, Hash, AccountId>> =
-                super::generic_decode(encoded)?;
-            serde_json::json!({ "value": decoded })
-        }
-        "EraRewardPoints<T::AccountId>" => {
-            let decoded: EraRewardPoints<AccountId> = super::generic_decode(encoded)?;
-            serde_json::json!({ "value": decoded })
-        }
-        "ActiveEraInfo" => {
-            let decoded: ActiveEraInfo = super::generic_decode(encoded)?;
-            serde_json::json!({ "value": decoded })
-        }
+    let value = try_decode_and_as_json! {
+    any_ty, encoded =>
+        "u32" => u32;
+        "u64" => u64;
+        "bool" => bool;
 
-        _ => {
-            println!("Unknown value type: {:?}", any_ty);
-            return Err("Unknown value type".into());
-        }
+        "T::Hash" => Hash;
+        "T::Moment" => u64;
+        "T::BlockNumber" => BlockNumber;
+        "T::AccountId" => AccountId;
+
+        "EventIndex"  => u32;
+        "Multiplier" => sp_runtime::FixedU128;
+
+        "Vec<T::Hash>" => Vec<Hash>;
+        "Vec<T::BlockNumber>" => Vec<BlockNumber>;
+        "weights::ExtrinsicsWeight" => ExtrinsicsWeight;
+        "Vec<UncleEntryItem<T::BlockNumber, T::Hash, T::AccountId>>" => Vec<UncleEntryItem<BlockNumber, Hash, AccountId>>;
+        "EraRewardPoints<T::AccountId>" => EraRewardPoints<AccountId>;
+        "ActiveEraInfo" => ActiveEraInfo;
+
+        "(BalanceOf<T>, Vec<T::AccountId>)" => (Balance, Vec<AccountId>);
+        // "AccountInfo<T::Index, T::AccountData>" => AccountInfo<AccountIndex, AccountData<Balance>>;
+        // "Vec<EventRecord<T::Event, T::Hash>>" => Vec<EventRecord<chainx_runtime::Event, Hash>>;
     };
 
     Ok(value)

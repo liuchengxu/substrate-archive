@@ -277,6 +277,38 @@ fn generic_decode<T: codec::Decode>(encoded: Vec<u8>) -> Result<T, codec::Error>
     Decode::decode(&mut encoded.as_slice())
 }
 
+// Filter out (key1, key2) pairs of all DoubleMap.
+pub fn filter_double_map(metadata: Metadata) -> Vec<(String, String)> {
+    metadata
+        .modules
+        .into_iter()
+        .map(|(_, module_metadata)| {
+            module_metadata
+                .storage
+                .into_iter()
+                .filter_map(|(_, storage_metadata)| {
+                    if let StorageEntryType::DoubleMap {
+                        ref key1, ref key2, ..
+                    } = storage_metadata.ty
+                    {
+                        let key1_ty = as_decoded_type(key1.clone());
+                        let key2_ty = as_decoded_type(key2.clone());
+                        Some((key1_ty, key2_ty))
+                    } else {
+                        None
+                    }
+                })
+        })
+        .flatten()
+        .collect()
+}
+
+pub fn filter_double_map_key1_types(metadata: Metadata) -> Vec<String> {
+    let keys_map: HashMap<String, String> = filter_double_map(metadata).into_iter().collect();
+    let key1_type_set = keys_map.keys();
+    key1_type_set.into_iter().map(|x| x.clone()).collect()
+}
+
 /*
 TODO: use a script to generate this function automatically.
 
