@@ -104,6 +104,11 @@ macro_rules! try_decode_and_as_json {
 
                 }
             )+
+            "Vec<EventRecord<T::Event, T::Hash>>" => {
+                let decoded: Vec<EventRecord<chainx_runtime::Event, Hash>> =
+                    super::generic_decode($encoded)?;
+                serde_json::json!({ "value": format!("{:?}", decoded)})
+            }
             _ => {
                 println!("Unknown value type: {:?}", $value_ty);
                 return Err("Unknown value type".into());

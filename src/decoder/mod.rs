@@ -248,6 +248,7 @@ fn get_double_map_key1_length_table() -> HashMap<String, u32> {
     double_map_key1_length_table.insert(String::from("EraIndex"), 8);
     // Kind = [u8; 16]
     double_map_key1_length_table.insert(String::from("Kind"), 32);
+    double_map_key1_length_table.insert(String::from("Chain"), 2);
     double_map_key1_length_table
 }
 
@@ -307,6 +308,32 @@ pub fn filter_double_map_key1_types(metadata: Metadata) -> Vec<String> {
     let keys_map: HashMap<String, String> = filter_double_map(metadata).into_iter().collect();
     let key1_type_set = keys_map.keys();
     key1_type_set.into_iter().map(|x| x.clone()).collect()
+}
+
+fn get_value_type(ty: StorageEntryType) -> String {
+    match ty {
+        StorageEntryType::Plain(value) => as_decoded_type(value),
+        StorageEntryType::Map { value, .. } => as_decoded_type(value),
+        StorageEntryType::DoubleMap { value, .. } => as_decoded_type(value),
+    }
+}
+
+pub fn filter_storage_value_types(metadata: Metadata) -> Vec<String> {
+    let mut value_types = metadata
+        .modules
+        .into_iter()
+        .map(|(_, module_metadata)| {
+            module_metadata
+                .storage
+                .into_iter()
+                .map(|(_, storage_metadata)| get_value_type(storage_metadata.ty))
+        })
+        .flatten()
+        .collect::<Vec<_>>();
+
+    value_types.sort();
+    value_types.dedup();
+    value_types
 }
 
 /*

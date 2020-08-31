@@ -18,8 +18,22 @@ mod cli_opts;
 mod config;
 
 use anyhow::Result;
+use std::collections::HashMap;
 use std::convert::TryInto;
 use std::ops::Deref;
+
+use substrate_archive::decoder;
+
+use std::fs::{File, OpenOptions};
+use std::io::Write;
+
+pub fn open_file(path: &str) -> Result<File, std::io::Error> {
+    OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(path)
+}
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
@@ -32,17 +46,69 @@ pub async fn main() -> Result<()> {
     let meta: &Vec<u8> = meta.deref();
     let meta: frame_metadata::RuntimeMetadataPrefixed =
         codec::Decode::decode(&mut meta.as_slice()).expect("failed to decode metadata prefixed");
-    let m: substrate_archive::decoder::metadata::Metadata =
+    let metadata: decoder::metadata::Metadata =
         meta.try_into().expect("failed to convert to metadata");
-    let lookup_table: substrate_archive::decoder::StorageMetadataLookupTable = m.clone().into();
+    let lookup_table: decoder::StorageMetadataLookupTable = metadata.clone().into();
 
-    let double_map_key1 = substrate_archive::decoder::filter_double_map_key1_types(m);
+    let double_map_key1 = decoder::filter_double_map_key1_types(metadata.clone());
 
-    // Ensure all key1 of double map are determined.
-    //
-    // ["Kind", "TradingPairId", "SessionIndex", "T::AccountId", "Chain"]
-    //
+    let double_map_key1_length_table: HashMap<String, usize> = vec![
+        // u32
+        // u32 hex::encode(1u32.encode()).chars().count()
+        ("EraIndex", 8),
+        ("SessionIndex", 8),
+        ("TradingPairId", 8),
+        // Kind = [u8; 16]
+        ("Kind", 32),
+        // Enum Chain
+        ("Chain", 2),
+        ("T::AccountId", 64),
+    ]
+    .into_iter()
+    .map(|(k, v)| (k.into(), v))
+    .collect();
+
+    println!("double_map_key1:{:?}", double_map_key1);
+    for key1 in double_map_key1.iter() {
+        println!("key1:{:?}", key1);
+        if !double_map_key1_length_table.contains_key(key1) {
+            panic!("All key1 length of double map should be determined right now");
+        }
+    }
+
+    // TODO: Ensure all key1 of double map are determined.
+
     // TODO: build the tables from the metadata
+    let storage_value_types = decoder::filter_storage_value_types(metadata);
+
+    let exe_dir = std::env::current_exe().unwrap();
+    let output = exe_dir.join("types.rs");
+    // let mut output = open_file(&format!("{}", output.display())).unwrap();
+    let mut output = open_file("/home/xlc/data/src/github.com/paritytech/substrate-archive/bin/chainx-archive/src/types.rs").unwrap();
+    write!(output, "match try_decode_storage_value! {{\n").unwrap();
+    write!(output, "    any_type, encoded =>\n").unwrap();
+    for value_ty in storage_value_types.iter() {
+        let raw_value_ty = value_ty.clone();
+        let value_ty = value_ty.replace("\n", "");
+        let value_ty = value_ty.replace("T::AccountId", "AccountId");
+        let value_ty = value_ty.replace("T::ValidatorId", "AccountId");
+        let value_ty = value_ty.replace("T::Authority", "ImOnlineId");
+        let value_ty = value_ty.replace("T::Balance", "Balance");
+        let value_ty = value_ty.replace("T::BlockNumber", "BlockNumber");
+        let value_ty = value_ty.replace("T::Hash", "Hash");
+        let value_ty = value_ty.replace("T::Index", "AccountIndex");
+        let value_ty = value_ty.replace("T::Price", "Balance");
+        let value_ty = value_ty.replace("T::Moment", "Moment");
+        let value_ty = value_ty.replace("T::Event", "Event");
+        let value_ty = value_ty.replace("T::Keys", "SessionKeys");
+        let value_ty = value_ty.replace("T::AccountData", "AccountData");
+        let value_ty = value_ty.replace("BalanceOf<T>", "Balance");
+        let value_ty = value_ty.replace("BalanceOf<T, I>", "Balance");
+        let line = format!("{:?} => {},", raw_value_ty, value_ty);
+        write!(output, "        {:?} => {},\n", raw_value_ty, value_ty).unwrap();
+    }
+    write!(output, "}}\n").unwrap();
+    return Ok(());
 
     let config = config::Config::new()?;
     substrate_archive::init_logger(config.cli().log_level, log::LevelFilter::Debug);
