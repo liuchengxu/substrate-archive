@@ -15,25 +15,32 @@
 // along with substrate-archive.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::actors::msg::VecStorageWrap;
+use crate::backend::Meta;
 use crate::database::{Database, DbConn, StorageModel};
+use crate::decoder::StorageMetadataLookupTable;
 use crate::error::Result;
 use crate::queries;
 use crate::types::{BatchBlock, Block, Metadata, Storage};
+use sp_runtime::generic::BlockId;
 use sp_runtime::traits::{Block as BlockT, NumberFor};
+use std::convert::TryInto;
 use std::marker::PhantomData;
+use std::ops::Deref;
 use std::time::Duration;
 use xtra::prelude::*;
 
 #[derive(Clone)]
 pub struct DatabaseActor<B: BlockT> {
     db: Database,
+    meta: Option<Meta<B>>,
     _marker: PhantomData<B>,
 }
 
 impl<B: BlockT> DatabaseActor<B> {
-    pub async fn new(url: String) -> Result<Self> {
+    pub async fn new(url: String, meta: Meta<B>) -> Result<Self> {
         Ok(Self {
             db: Database::new(url).await?,
+            meta: Some(meta),
             _marker: PhantomData,
         })
     }
@@ -42,6 +49,7 @@ impl<B: BlockT> DatabaseActor<B> {
     pub fn with_db(db: Database) -> Self {
         Self {
             db,
+            meta: None,
             _marker: PhantomData,
         }
     }
@@ -113,7 +121,59 @@ impl<B: BlockT> DatabaseActor<B> {
         }
         // we drop the connection early so that the insert() has the use of all db connections
         std::mem::drop(conn);
-        let storage = Vec::<StorageModel<B>>::from(VecStorageWrap(storage));
+        let storage = Vec::<StorageModel<B>>::from(VecStorageWrap(storage.clone()));
+
+        if let Some(m) = &self.meta {
+            for s in storage.iter() {
+                if s.data().is_none() {
+                    log::debug!("StorageData is none");
+                    continue;
+                }
+
+                let meta = m.clone();
+                let blk_hash = *s.hash();
+                let opaque_metadata = smol::unblock!(meta.metadata(&BlockId::hash(blk_hash)))?;
+                let meta: &Vec<u8> = opaque_metadata.deref();
+                let meta: frame_metadata::RuntimeMetadataPrefixed =
+                    codec::Decode::decode(&mut meta.as_slice())
+                        .expect("failed to decode metadata prefixed");
+                let metadata: crate::decoder::metadata::Metadata =
+                    meta.try_into().expect("failed to convert to metadata");
+                let storage_decoder: crate::decoder::StorageMetadataLookupTable =
+                    metadata.clone().into();
+
+                let decoded_storage_key =
+                    storage_decoder.parse_storage_key(hex::encode(&s.key().0));
+                if let Some(sk) = decoded_storage_key {
+                    let value_ty = sk.get_value_type();
+                    if let Some(ref storage_value) = s.data() {
+                        let decoded_value = crate::decoder::storage_value::try_decode_storage_value(
+                            value_ty.as_str(),
+                            storage_value.0.clone(),
+                        );
+
+                        let common_msg = format!(
+                            "block_num:{:?}, module_prefix:{:?}, storage_prefix:{:?}, value_tye: {:?}",
+                                    s.block_num(),
+                                    sk.module_prefix,
+                                    sk.storage_prefix,
+                                    value_ty,
+                                );
+
+                        match decoded_value {
+                            Ok(value) => println!("{}, value:{:?}", common_msg, value),
+                            Err(e) => {
+                                println!("{}, can not decode storage value:{:?}", common_msg, e);
+                            }
+                        }
+                    } else {
+                        println!("block_num:{:?}, storage_value is none", s.block_num());
+                    }
+                } else {
+                }
+            }
+        }
+
         self.db.insert(storage).await?;
         Ok(())
     }

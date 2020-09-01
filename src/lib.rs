@@ -21,6 +21,7 @@ mod actors;
 pub mod archive;
 pub mod backend;
 mod database;
+pub mod decoder;
 mod error;
 mod migrations;
 // mod rpc;
