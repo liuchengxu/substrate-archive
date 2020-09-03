@@ -1,5 +1,6 @@
 # Must be an absolute path to db (no ~/) (required)
-db_path = "/home/insipx/.local/share/node-template/chains/dev/db"
+# db_path = "/home/insipx/.local/share/node-template/chains/dev/db"
+db_path="/Users/xuliucheng/Library/ApplicationSupport/substrate/chains/dev/db"
 
 # How much should the read-only database keep in cache (MB) (default: 128)
 cache_size = 128
@@ -11,7 +12,7 @@ block_workers = 4
 # Number of 64KB Heap Pages to allocate for WASM execution default: 2048
 wasm_pages = 512
 
-# Optional Database Parameters. 
+# Optional Database Parameters.
 # Can also be specified via the `DATABASE_URL` environment variable
 
 # Can also be specified with DB_HOST environment variable
@@ -21,6 +22,6 @@ wasm_pages = 512
 # Can also be specified with DB_USER environment variable
 db_user = "postgres"
 # Can also be specified with DB_PASS environment variable
-db_pass = "123"
+db_pass = "xlc123"
 # Can also be specified with DB_NAME environment variable
-# db_name = "postgres"
+db_name = "archive"
