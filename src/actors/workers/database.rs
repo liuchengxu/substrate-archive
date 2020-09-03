@@ -113,6 +113,8 @@ impl<B: BlockT> DatabaseActor<B> {
     }
 
     async fn batch_storage_handler(&self, storage: Vec<Storage<B>>) -> Result<()> {
+        use codec::Encode;
+
         let mut conn = self.db.conn().await?;
         let mut block_nums: Vec<u32> = storage.iter().map(|s| s.block_num()).collect();
         block_nums.sort();
@@ -157,7 +159,29 @@ impl<B: BlockT> DatabaseActor<B> {
                                 );
 
                         match decoded_value {
-                            Ok(value) => println!("{}, value:{:?}", common_msg, value),
+                            Ok(value) => {
+                                if sk.module_prefix == "System" && sk.storage_prefix == "Account" {
+                                    let test_data = crate::types::FrameEntry::new(
+                                        crate::types::Frame::System,
+                                        0,
+                                        s.hash().encode(),
+                                        "SystemAccount".to_string(),
+                                        Some(value.clone()),
+                                    );
+                                    self.db.insert(test_data).await?;
+                                }
+                                if sk.module_prefix == "System" && sk.storage_prefix == "Events" {
+                                    let test_data = crate::types::FrameEntry::new(
+                                        crate::types::Frame::System,
+                                        0,
+                                        s.hash().encode(),
+                                        "SystemEvents".to_string(),
+                                        Some(serde_json::json!({ "value": value })),
+                                    );
+                                    self.db.insert(test_data).await?;
+                                }
+                                println!("-------- {}, value:{:?}", common_msg, value);
+                            }
                             Err(e) => {
                                 println!("{}, can not decode storage value:{:?}", common_msg, e);
                             }

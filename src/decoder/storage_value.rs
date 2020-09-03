@@ -142,8 +142,8 @@ pub fn try_decode_storage_value(
         "ActiveEraInfo" => ActiveEraInfo;
 
         "(BalanceOf<T>, Vec<T::AccountId>)" => (Balance, Vec<AccountId>);
-        // "AccountInfo<T::Index, T::AccountData>" => AccountInfo<AccountIndex, AccountData<Balance>>;
-        // "Vec<EventRecord<T::Event, T::Hash>>" => Vec<EventRecord<chainx_runtime::Event, Hash>>;
+        "AccountInfo<T::Index, T::AccountData>" => AccountInfo<AccountIndex, AccountData<Balance>>;
+        // "Vec<EventRecord<T::Event, T::Hash>>" => Vec<EventRecord<polkadot_runtime::Event, Hash>>;
     };
 
     Ok(value)

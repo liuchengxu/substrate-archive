@@ -74,6 +74,7 @@ pallet-staking = { git = "https://github.com/paritytech/substrate", branch = "ma
 pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "master" }
 
 node-runtime = { git = "https://github.com/paritytech/substrate", branch = "master" }
+polkadot-runtime = { git = "https://github.com/paritytech/polkadot", branch = "master" }
 
 [dev-dependencies]
 # desub-extras = { path = "../desub/extras/", package="desub-extras", features = ["polkadot"] }
