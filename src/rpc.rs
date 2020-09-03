@@ -26,7 +26,7 @@ use sp_runtime::traits::{Block as BlockT, HashFor};
 use sp_version::RuntimeVersion;
 use std::marker::PhantomData;
 
-use crate::error::Error as Error;
+use crate::error::Error;
 
 /// Communicate with Substrate node via RPC
 #[derive(Clone)]
@@ -38,7 +38,7 @@ pub struct Rpc<Block: BlockT> {
 /// Methods that return fetched value directly
 impl<Block: BlockT> Rpc<Block> {
     pub(crate) async fn connect(url: &str) -> Result<Self, Error> {
-        let client = jsonrpsee::ws_client(&url).await?;
+        let client = jsonrpsee::ws_client(&url).await.unwrap();
         Ok(Rpc {
             client,
             _marker: PhantomData,
@@ -53,16 +53,18 @@ impl<Block: BlockT> Rpc<Block> {
         let version = self
             .client
             .request("state_getRuntimeVersion", params)
-            .await?;
+            .await
+            .unwrap();
         Ok(version)
     }
 
-    pub(crate) async fn metadata(
-        &self,
-        hash: Option<Block::Hash>,
-    ) -> Result<Vec<u8>, Error> {
+    pub(crate) async fn metadata(&self, hash: Option<Block::Hash>) -> Result<Vec<u8>, Error> {
         let params = Params::Array(vec![to_json_value(hash)?]);
-        let bytes: Bytes = self.client.request("state_getMetadata", params).await?;
+        let bytes: Bytes = self
+            .client
+            .request("state_getMetadata", params)
+            .await
+            .unwrap();
         Ok(bytes.0)
     }
 
@@ -76,7 +78,8 @@ impl<Block: BlockT> Rpc<Block> {
                 Params::None,
                 "chain_subscribeFinalizedHeads",
             )
-            .await?;
+            .await
+            .unwrap();
         Ok(subscription)
     }
 }

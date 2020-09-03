@@ -24,16 +24,34 @@ use std::marker::PhantomData;
 use std::time::Duration;
 use xtra::prelude::*;
 
+use crate::backend::Meta;
+use crate::decoder::{self, StorageMetadataLookupTable};
+use sp_runtime::generic::BlockId;
+use std::convert::TryInto;
+
 #[derive(Clone)]
 pub struct DatabaseActor<B: BlockT> {
     db: Database,
+    storage_decoder: Option<StorageMetadataLookupTable>,
     _marker: PhantomData<B>,
 }
 
 impl<B: BlockT> DatabaseActor<B> {
     pub async fn new(url: String) -> Result<Self> {
+        // TODO: eliminate rpc
+        let rpc = crate::rpc::Rpc::<B>::connect("ws://127.0.0.1:9944").await?;
+        let meta = rpc.metadata(None).await?;
+
+        let meta: frame_metadata::RuntimeMetadataPrefixed =
+            codec::Decode::decode(&mut meta.as_slice())
+                .expect("failed to decode metadata prefixed");
+        let m: crate::decoder::metadata::Metadata =
+            meta.try_into().expect("failed to convert to metadata");
+        let lookup_table: StorageMetadataLookupTable = m.into();
+
         Ok(Self {
             db: Database::new(url).await?,
+            storage_decoder: Some(lookup_table),
             _marker: PhantomData,
         })
     }
@@ -42,6 +60,7 @@ impl<B: BlockT> DatabaseActor<B> {
     pub fn with_db(db: Database) -> Self {
         Self {
             db,
+            storage_decoder: None,
             _marker: PhantomData,
         }
     }
@@ -114,6 +133,43 @@ impl<B: BlockT> DatabaseActor<B> {
         // we drop the connection early so that the insert() has the use of all db connections
         std::mem::drop(conn);
         let storage = Vec::<StorageModel<B>>::from(VecStorageWrap(storage));
+
+        if let Some(decoder) = &self.storage_decoder {
+            for s in storage.iter() {
+                if s.data().is_none() {
+                    continue;
+                }
+                let decoded_storage_key = decoder.parse_storage_key(hex::encode(&s.key().0));
+                if let Some(sk) = decoded_storage_key {
+                    let value_ty = sk.get_value_type();
+                    if let Some(ref storage_value) = s.data() {
+                        let decoded_value = crate::decoder::storage_value::try_decode_storage_value(
+                            value_ty.as_str(),
+                            storage_value.0.clone(),
+                        );
+
+                        let common_msg = format!(
+                            "block_num:{:?}, module_prefix:{:?}, storage_prefix:{:?}, value_tye: {:?}",
+                                    s.block_num(),
+                                    sk.module_prefix,
+                                    sk.storage_prefix,
+                                    value_ty,
+                                );
+
+                        match decoded_value {
+                            Ok(value) => println!("{}, value:{:?}", common_msg, value),
+                            Err(e) => {
+                                println!("{}, can not decode storage value:{:?}", common_msg, e);
+                            }
+                        }
+                    } else {
+                        println!("block_num:{:?}, storage_value is none", s.block_num());
+                    }
+                } else {
+                }
+            }
+        }
+
         self.db.insert(storage).await?;
         Ok(())
     }

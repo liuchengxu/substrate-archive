@@ -24,7 +24,7 @@ mod database;
 pub mod decoder;
 mod error;
 mod migrations;
-// mod rpc;
+mod rpc;
 // #[cfg(test)]
 // mod simple_db;
 mod sql_block_builder;
