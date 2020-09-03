@@ -109,7 +109,7 @@ macro_rules! try_decode_and_as_json {
                 serde_json::json!({ "value": format!("{:?}", decoded)})
             }
             _ => {
-                println!("Unknown value type: {:?}", $value_ty);
+                log::error!("Unknown value type: {:?}", $value_ty);
                 return Err("Unknown value type".into());
             }
         }

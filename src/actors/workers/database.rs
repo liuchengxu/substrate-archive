@@ -163,7 +163,7 @@ impl<B: BlockT> DatabaseActor<B> {
                                 if sk.module_prefix == "System" && sk.storage_prefix == "Account" {
                                     let test_data = crate::types::FrameEntry::new(
                                         crate::types::Frame::System,
-                                        0,
+                                        s.block_num(),
                                         s.hash().encode(),
                                         "SystemAccount".to_string(),
                                         Some(value.clone()),
@@ -173,7 +173,7 @@ impl<B: BlockT> DatabaseActor<B> {
                                 if sk.module_prefix == "System" && sk.storage_prefix == "Events" {
                                     let test_data = crate::types::FrameEntry::new(
                                         crate::types::Frame::System,
-                                        0,
+                                        s.block_num(),
                                         s.hash().encode(),
                                         "SystemEvents".to_string(),
                                         Some(serde_json::json!({ "value": value })),
